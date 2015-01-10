@@ -52,6 +52,7 @@ Life.prototype = function() {
 
     //could there be different types of life, represented by different colors, with different life/death rules?
     seed = [
+        /*[0,1,0,1,0,1,0,1,0,1,0,1,0,1],
         [0,1,0,1,0,1,0,1,0,1,0,1,0,1],
         [0,1,0,1,0,1,0,1,0,1,0,1,0,1],
         [0,1,0,1,0,1,0,1,0,1,0,1,0,1],
@@ -60,14 +61,13 @@ Life.prototype = function() {
         [0,1,0,1,0,1,0,1,0,1,0,1,0,1],
         [0,1,0,1,0,1,0,1,0,1,0,1,0,1],
         [0,1,0,1,0,1,0,1,0,1,0,1,0,1],
-        [0,1,0,1,0,1,0,1,0,1,0,1,0,1],
-        [0,1,0,1,0,1,0,1,0,1,0,1,0,1],
+        [0,1,0,1,0,1,0,1,0,1,0,1,0,1],*/
     ],
     bitmap = seed,
 
-    timescale = 1,  //for example, 1 means one rule application cycle per frame.  must be an integer gte 1, higher number means slower growth
-    pixelscalex = 10, //for example, 10 means each column measures 10 pixels in width. must be an integer 
-    pixelscaley = 10, //for example, 10 means each row measures 10 pixels in height. must be an integer 
+    timescale = 1,  //for example, 1 means 1 cycle per frame.  must be an integer gte 1, the higher, the slower
+    pixelscalex = 4, //for example, 10 means each column measures 10 pixels in width. must be an integer 
+    pixelscaley = 4, //for example, 10 means each row measures 10 pixels in height. must be an integer 
 
     frame_count = 0,
     frame_last_rendered = -timescale,
@@ -77,6 +77,16 @@ Life.prototype = function() {
     fps = 0,
     fps_update_limit = 100,
     fps_last_update = timestamp_now(),
+
+    generate_random_seed = function() {
+        var seed = fill_out_bitmap([]);
+        for ( var y=0; y < canvas.height; y++ ) {
+            for ( var x=0; x < canvas.width; x++ ) {
+                seed[y][x] = Math.round( Math.random() );
+            }
+        }
+        return seed;
+    },
 
     rules = {
         alive: function( bitmap, x, y ) {
@@ -202,15 +212,17 @@ Life.prototype = function() {
                 element_hide(this.btn_start);
             }
             canvas = get_canvas();
-            fps_gauge = get_fps_gauge();
-            element_show(fps_gauge);
-            animation_id = requestAnimationFrame( on_next_frame ); 
-
             window.onresize = function() {
                 canvas.width = stage.width();
                 canvas.height = stage.height();
             };
             window.onresize();
+
+            fps_gauge = get_fps_gauge();
+            element_show(fps_gauge);
+
+            bitmap = generate_random_seed();
+            animation_id = requestAnimationFrame( on_next_frame ); 
         }
     },
 
