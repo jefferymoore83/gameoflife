@@ -53,52 +53,131 @@ Life.prototype = function() {
     //could there be different types of life, represented by different colors, with different life/death rules?
     seed = [
         [0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-        [0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-        [0,0,0,0,0,0,1,0,0,0,0,0,0,0],
-        [0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-        [0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+        [0,0,0,0,0,1,0,1,0,0,0,0,0,0],
+        [0,0,0,0,1,1,1,0,0,1,1,0,0,0],
+        [0,0,0,0,0,1,1,1,1,1,1,0,0,0],
+        [0,0,0,0,0,0,0,0,1,0,0,0,0,1]
     ],
     bitmap = seed,
 
-    timescale = 1,  //for example, 1 means one rule application cycle per frame.  must be an integer gte 1
+    timescale = 10,  //for example, 1 means one rule application cycle per frame.  must be an integer gte 1, higher number means slower growth
     pixelscalex = 10, //for example, 10 means each column measures 10 pixels in width. must be an integer 
     pixelscaley = 10, //for example, 10 means each row measures 10 pixels in height. must be an integer 
 
+    frame_count = 0,
+    frame_last_rendered = -timescale,
     animation_id = false,
     animation_last_run = timestamp_now(),
 
     fps = 0,
     fps_update_limit = 100,
     fps_last_update = timestamp_now(),
-    
-    apply_rules = function( bitmap, x, y ) {
-        //what will these be? maybe standardize a way of creating different rulesets
-        return bitmap;
-    },
 
-    filled_pixel = function( bitmap, x, y ) {
-        var filled = ( bitmap[y] && bitmap[y][x] && ( bitmap[y][x] === 1 ) );
-        /*
-        if (filled) {
-            ctx.fillStyle = "green";
-        }
-        */
-        return filled;
+    rules = {
+        alive: function( bitmap, x, y ) {
+            var alive = ( bitmap[y] && bitmap[y][x] && ( bitmap[y][x] === 1 ) );
+            /*
+            if (alive) {
+                ctx.fillStyle = "green";
+            }
+            */
+            return alive;
+        },
+
+        alive_offset: function( bitmap, x, y, offsetx, offsety ) {
+            return this.alive( bitmap, x + offsetx, y + offsety );
+        },
+        
+        surround_count: function( bitmap, x, y ) {
+            var living = 0,
+                vicinity = [
+                    this.alive_offset( bitmap, x, y, -1, -1 ),
+                    this.alive_offset( bitmap, x, y,  0, -1 ),
+                    this.alive_offset( bitmap, x, y,  1, -1 ),
+                    this.alive_offset( bitmap, x, y,  1,  0 ),
+                    this.alive_offset( bitmap, x, y,  1,  1 ),
+                    this.alive_offset( bitmap, x, y,  0,  1 ),
+                    this.alive_offset( bitmap, x, y, -1,  1 ),
+                    this.alive_offset( bitmap, x, y, -1,  0 )
+                ];
+            for (var i=0; i < vicinity.length; i++) {
+                if ( vicinity[i] ) {
+                    living++;
+                }
+            }
+            //debug.log('surround_counted: ',living);
+            return living;
+        },
+
+        check_all: function( bitmap, x, y, count ) {
+            var rules  = this.ruleset,
+                status = this.alive( bitmap, x, y );
+
+            for(var i=0; i < rules.length; i++) {
+                if ( !rules[i]( status, count ) ) {
+                    return false;
+                }
+            }
+            return true;
+        },
+
+        apply: function( bitmap, x, y ) {
+            var newframe = fill_out_bitmap( bitmap );
+            for ( var y=0; y < canvas.height; y++ ) {
+                for ( var x=0; x < canvas.width; x++ ) {
+                    newframe[y][x] = rules.check_all( bitmap, x, y, rules.surround_count( bitmap, x, y ) ) ? 1 : 0;
+                }
+            }
+            return newframe;
+        },
+
+        //John Conway's ruleset
+        ruleset: [
+            //if no living squares surround a living square, it dies of loneliness
+            function( status, count ) {
+                return ( status && ( count === 0 ) );  
+            },
+            //if a living square is surrounded 3 or more other living squares, it dies of overcrowding
+            function( status, count ) {
+                return ( status && ( count < 3 ) );  
+            },
+            //if a dead square is surrounded by 3 living squares, it's born
+            function( status, count ) {
+                return ( status || ( !status && ( count >= 3 ) ) );  
+            }
+        ]
+
     },
 
     render_frame = function( canvas, bitmap ) {
         //do not apply rules or redraw if not enough frames have passed to satisfy timescale
-        ctx.clearRect ( 0 , 0 , canvas.width, canvas.height );
+        if ( frame_count >= ( frame_last_rendered + timescale ) ) {
+            ctx.clearRect ( 0 , 0 , canvas.width, canvas.height );
 
-        for ( var y=0; y < canvas.height; y++ ) {
-            for ( var x=0; x < canvas.width; x++ ) {
-                apply_rules( bitmap, x, y );
-                if ( filled_pixel( bitmap, x, y ) ) {
-                   ctx.fillRect( x * pixelscalex, y * pixelscaley, pixelscalex, pixelscaley );
+            bitmap = rules.apply( bitmap );
+
+            for ( var y=0; y < canvas.height; y++ ) {
+                for ( var x=0; x < canvas.width; x++ ) {
+                    if ( rules.alive( bitmap, x, y ) ) {
+                       ctx.fillRect( x * pixelscalex, y * pixelscaley, pixelscalex, pixelscaley );
+                    }
                 }
             }
+            frame_last_rendered = frame_count;
+            debug.log('rendered frame change');
         }
-        debug.log('frame rendered');
+        frame_count++;
+    },
+
+    fill_out_bitmap = function( bitmap ) {
+        //ensure our bitmap has all the pixels it needs
+        for ( var y=0; y < canvas.height; y++ ) {
+            for ( var x=0; x < canvas.width; x++ ) {
+                if ( !bitmap[y] ) { bitmap[y] = new Array(canvas.width); }
+                if ( !bitmap[y][x] ) { bitmap[y][x] = 0; }
+            }
+        }
+        return bitmap;
     },
 
     on_next_frame = function() {
@@ -111,6 +190,7 @@ Life.prototype = function() {
     animation_start = function() {
         self = this;
         if (animation_id === false) {
+            debug.log('timescale is '+timescale+', so a change will be rendered every '+timescale+' frames');
             if (this.btn_start && this.btn_stop) {
                 element_show(this.btn_stop);
                 element_hide(this.btn_start);
