@@ -1,0 +1,15 @@
+body {
+	font: 16px "Helvetica Nueue", Helvetica, Arial, sans-serif;
+	margin: 0;
+	overflow: hidden; /* cannot figure out why this is needed to prevent random scrollbars */
+}
+.life-controls { position: fixed; bottom: 24px; left: 24px; }
+.life-fps-gauge {
+	display: inline-block;
+	position: fixed;
+	bottom: 24px;
+	right: 24px;
+	border: 1px solid #ccc;
+	padding: .25em .5em;
+	font-size: 12px;
+}

@@ -1,12 +1,38 @@
 <!DOCTYPE html>
-<html lang="en" class="">
+<html lang="en">
 <head>
-<meta charset="utf-8">
-<meta http-equiv="X-UA-Compatible" content="IE=edge">
-<title>Game of Life in JS</title>
-<link href="life.css" media="all" rel="stylesheet" type="text/css" />
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<title>Game of Life in JS</title>
+	<link href="life.css" media="all" rel="stylesheet" type="text/css" />
 </head>
 <body>
+
+<div class="life-controls">
+	<button class="btn-start">Start</button>
+	<button class="btn-stop">Stop</button>
+</div>
+
 <script src="life.js"></script>
+<script>
+
+var btns = {
+	start: document.getElementsByClassName('btn-start')[0],
+	stop: document.getElementsByClassName('btn-stop')[0]
+},
+life = new Life( {
+	debug: true,
+	btn_start: btns.start,
+	btn_stop: btns.stop
+} );
+
+btns.start.onclick = function() {
+	life.start();
+};
+btns.stop.onclick = function() {
+	life.stop();
+};
+
+</script>
 </body>
 </html>
