@@ -52,15 +52,20 @@ Life.prototype = function() {
 
     //could there be different types of life, represented by different colors, with different life/death rules?
     seed = [
-        [0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-        [0,0,0,0,0,1,0,1,0,0,0,0,0,0],
-        [0,0,0,0,1,1,1,0,0,1,1,0,0,0],
-        [0,0,0,0,0,1,1,1,1,1,1,0,0,0],
-        [0,0,0,0,0,0,0,0,1,0,0,0,0,1]
+        [0,1,0,1,0,1,0,1,0,1,0,1,0,1],
+        [0,1,0,1,0,1,0,1,0,1,0,1,0,1],
+        [0,1,0,1,0,1,0,1,0,1,0,1,0,1],
+        [0,1,0,1,0,1,0,1,0,1,0,1,0,1],
+        [0,1,0,1,0,1,0,1,0,1,0,1,0,1],
+        [0,1,0,1,0,1,0,1,0,1,0,1,0,1],
+        [0,1,0,1,0,1,0,1,0,1,0,1,0,1],
+        [0,1,0,1,0,1,0,1,0,1,0,1,0,1],
+        [0,1,0,1,0,1,0,1,0,1,0,1,0,1],
+        [0,1,0,1,0,1,0,1,0,1,0,1,0,1],
     ],
     bitmap = seed,
 
-    timescale = 10,  //for example, 1 means one rule application cycle per frame.  must be an integer gte 1, higher number means slower growth
+    timescale = 1,  //for example, 1 means one rule application cycle per frame.  must be an integer gte 1, higher number means slower growth
     pixelscalex = 10, //for example, 10 means each column measures 10 pixels in width. must be an integer 
     pixelscaley = 10, //for example, 10 means each row measures 10 pixels in height. must be an integer 
 
@@ -132,14 +137,15 @@ Life.prototype = function() {
         },
 
         //John Conway's ruleset
+        //all these must return true to maintain or birth a square. otherwise the square dies or stays dead
         ruleset: [
             //if no living squares surround a living square, it dies of loneliness
             function( status, count ) {
-                return ( status && ( count === 0 ) );  
+                return ( !status || ( status && ( count > 0 ) ) );  
             },
             //if a living square is surrounded 3 or more other living squares, it dies of overcrowding
             function( status, count ) {
-                return ( status && ( count < 3 ) );  
+                return ( !status || ( status && ( count < 3 ) ) );  
             },
             //if a dead square is surrounded by 3 living squares, it's born
             function( status, count ) {
