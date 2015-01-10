@@ -17,6 +17,8 @@ http://natureofcode.com/book/chapter-7-cellular-automata/
 */
 
 var Life = function(config) {
+    "use strict";
+    
     if (config) {
         this.config = config;
     }
@@ -38,13 +40,14 @@ Life.prototype = function() {
 
     var
     self,
+    ctx,
     canvas,
     fps_gauge,
     timestamp_now = function() { return new Date().getTime(); },
 
     stage = {
-        width: document.documentElement.clientWidth,
-        height: document.documentElement.clientHeight
+        width: function() { return document.documentElement.clientWidth; },
+        height: function() { return document.documentElement.clientHeight; }
     },
 
     //could there be different types of life, represented by different colors, with different life/death rules?
@@ -73,15 +76,28 @@ Life.prototype = function() {
         return bitmap;
     },
 
+    filled_pixel = function( bitmap, x, y ) {
+        var filled = ( bitmap[y] && bitmap[y][x] && ( bitmap[y][x] === 1 ) );
+        /*
+        if (filled) {
+            ctx.fillStyle = "green";
+        }
+        */
+        return filled;
+    },
+
     render_frame = function( canvas, bitmap ) {
         //do not apply rules or redraw if not enough frames have passed to satisfy timescale
-        for ( var y=0; y < stage.height; y++ ) {
-            for ( var x=0; x < stage.width; x++ ) {
+        ctx.clearRect ( 0 , 0 , canvas.width, canvas.height );
+
+        for ( var y=0; y < canvas.height; y++ ) {
+            for ( var x=0; x < canvas.width; x++ ) {
                 apply_rules( bitmap, x, y );
+                if ( filled_pixel( bitmap, x, y ) ) {
+                   ctx.fillRect( x * pixelscalex, y * pixelscaley, pixelscalex, pixelscaley );
+                }
             }
         }
-        //manipulate canvas here, using current state of bitmap
-        //use pixelscalex and pixelscaley
         debug.log('frame rendered');
     },
 
@@ -103,6 +119,12 @@ Life.prototype = function() {
             fps_gauge = get_fps_gauge();
             element_show(fps_gauge);
             animation_id = requestAnimationFrame( on_next_frame ); 
+
+            window.onresize = function() {
+                canvas.width = stage.width();
+                canvas.height = stage.height();
+            };
+            window.onresize();
         }
     },
 
@@ -117,6 +139,7 @@ Life.prototype = function() {
             element_hide(fps_gauge);
             //element_remove(fps_gauge);
             debug.log('anim stopped');
+            window.onresize = null;
         }
     },
 
@@ -129,8 +152,7 @@ Life.prototype = function() {
             canvas.className = 'life-canvas';
             document.querySelector('body').appendChild( canvas );
         }
-        canvas.style.width = stage.width + 'px';
-        canvas.style.height = stage.height + 'px';
+        ctx = canvas.getContext( "2d" );
         return canvas;
     },
 
