@@ -46,28 +46,39 @@ Life.prototype = function() {
     timestamp_now = function() { return new Date().getTime(); },
 
     stage = {
-        width: function() { return document.documentElement.clientWidth; },
-        height: function() { return document.documentElement.clientHeight; }
+        width: function() { return window.innerWidth; },
+        height: function() { return window.innerHeight; }
     },
 
     //could there be different types of life, represented by different colors, with different life/death rules?
     seed = [
-        /*[0,1,0,1,0,1,0,1,0,1,0,1,0,1],
-        [0,1,0,1,0,1,0,1,0,1,0,1,0,1],
-        [0,1,0,1,0,1,0,1,0,1,0,1,0,1],
-        [0,1,0,1,0,1,0,1,0,1,0,1,0,1],
-        [0,1,0,1,0,1,0,1,0,1,0,1,0,1],
-        [0,1,0,1,0,1,0,1,0,1,0,1,0,1],
-        [0,1,0,1,0,1,0,1,0,1,0,1,0,1],
-        [0,1,0,1,0,1,0,1,0,1,0,1,0,1],
-        [0,1,0,1,0,1,0,1,0,1,0,1,0,1],
-        [0,1,0,1,0,1,0,1,0,1,0,1,0,1],*/
+        [0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,1,0,0,0,0,0],
+        [0,0,0,1,0,1,0,0,0,0],
+        [0,0,0,1,1,1,0,0,0,0],
+        [0,0,1,0,1,0,0,0,0,0],
+        [0,0,1,1,0,1,0,0,0,0],
+        [0,0,0,0,1,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0]
+    ],
+    seed = [
+        [1,0,1,0,1,0,1,0,1,0,1,0],
+        [0,1,0,1,0,1,0,1,0,1,0,1],
+        [1,0,1,0,1,0,1,0,1,0,1,0],
+        [0,1,0,1,0,1,0,1,0,1,0,1],
+        [1,0,1,0,1,0,1,0,1,0,1,0],
+        [0,1,0,1,0,1,0,1,0,1,0,1],
+        [1,0,1,0,1,0,1,0,1,0,1,0],
+        [0,1,0,1,0,1,0,1,0,1,0,1],
+        [1,0,1,0,1,0,1,0,1,0,1,0],
+        [0,1,0,1,0,1,0,1,0,1,0,1]
     ],
     bitmap = seed,
 
     timescale = 1,  //for example, 1 means 1 cycle per frame.  must be an integer gte 1, the higher, the slower
-    pixelscalex = 4, //for example, 10 means each column measures 10 pixels in width. must be an integer 
-    pixelscaley = 4, //for example, 10 means each row measures 10 pixels in height. must be an integer 
+    pixelscalex = 2, //for example, 10 means each column measures 10 pixels in width. must be an integer 
+    pixelscaley = 2, //for example, 10 means each row measures 10 pixels in height. must be an integer 
 
     frame_count = 0,
     frame_last_rendered = -timescale,
@@ -78,11 +89,13 @@ Life.prototype = function() {
     fps_update_limit = 100,
     fps_last_update = timestamp_now(),
 
-    generate_random_seed = function() {
-        var seed = fill_out_bitmap([]);
+    generate_random_seed = function(bias) {
+        var seed = fill_out_bitmap([]),
+            bias = bias ? bias : 1;
+
         for ( var y=0; y < canvas.height; y++ ) {
             for ( var x=0; x < canvas.width; x++ ) {
-                seed[y][x] = Math.round( Math.random() );
+                seed[y][x] = Math.round( Math.random() * bias );
             }
         }
         return seed;
@@ -221,7 +234,7 @@ Life.prototype = function() {
             fps_gauge = get_fps_gauge();
             element_show(fps_gauge);
 
-            bitmap = generate_random_seed();
+            bitmap = generate_random_seed(.525);
             animation_id = requestAnimationFrame( on_next_frame ); 
         }
     },
