@@ -18,7 +18,7 @@ http://natureofcode.com/book/chapter-7-cellular-automata/
 
 var Life = function(config) {
     "use strict";
-    this.init(this.config = config); 
+    this.init( config || {} ); 
 };
 
 Life.prototype = function() {
@@ -29,6 +29,7 @@ Life.prototype = function() {
     ctx,
     canvas,
     fps_gauge,
+    frame_last_rendered,
     timestamp_now = function() { return new Date().getTime(); },
 
     stage = {
@@ -61,13 +62,8 @@ Life.prototype = function() {
         [0,1,0,1,0,1,0,1,0,1,0,1]
     ],
     bitmap = seed,
-
-    timescale = 1,  //for example, 1 means 1 cycle per frame.  must be an integer gte 1, the higher, the slower
-    pixelscalex = 2, //for example, 10 means each column measures 10 pixels in width. must be an integer 
-    pixelscaley = 2, //for example, 10 means each row measures 10 pixels in height. must be an integer 
-
     frame_count = 0,
-    frame_last_rendered = -timescale,
+    
     animation_id = false,
     animation_last_run = timestamp_now(),
 
@@ -75,14 +71,22 @@ Life.prototype = function() {
     fps_update_limit = 100,
     fps_last_update = timestamp_now(),
 
-    config = {},
+    config = {
+        debug: false,
+        timescale: 1,  //for example, 1 means 1 cycle per frame.  must be an integer gte 1, the higher, the slower
+        cellsize: 2, //for example, 10 means each pixel measures 10 pixels in width/height
+    },
 
     init = function(cfg) {
         self = this;
-        config = cfg;
-        config.btn_start.onclick = animation_start;
-        config.btn_stop.onclick = animation_stop;
-        config.btn_stop.style.display = 'none';
+        config = merge_objects( config, cfg );
+        frame_last_rendered = -config.timescale;
+
+        if ( config.btn_start && config.btn_stop ) {
+            config.btn_start.onclick = animation_start;
+            config.btn_stop.onclick = animation_stop;
+            config.btn_stop.style.display = 'none';
+        }
     },
 
     generate_random_seed = function(bias) {
@@ -176,7 +180,7 @@ Life.prototype = function() {
 
     render_frame = function( canvas, bitmap ) {
         //do not apply rules or redraw if not enough frames have passed to satisfy timescale
-        if ( frame_count >= ( frame_last_rendered + timescale ) ) {
+        if ( frame_count >= ( frame_last_rendered + config.timescale ) ) {
             ctx.clearRect ( 0 , 0 , canvas.width, canvas.height );
 
             bitmap = rules.apply( bitmap );
@@ -184,7 +188,7 @@ Life.prototype = function() {
             for ( var y=0; y < canvas.height; y++ ) {
                 for ( var x=0; x < canvas.width; x++ ) {
                     if ( rules.alive( bitmap, x, y ) ) {
-                       ctx.fillRect( x * pixelscalex, y * pixelscaley, pixelscalex, pixelscaley );
+                       ctx.fillRect( x * config.cellsize, y * config.cellsize, config.cellsize, config.cellsize );
                     }
                 }
             }
@@ -214,7 +218,7 @@ Life.prototype = function() {
 
     animation_start = function() {
         if (animation_id === false) {
-            debug.log('timescale is '+timescale+', so a change will be rendered every '+timescale+' frames');
+            debug.log('timescale is '+config.timescale+', so a change will be rendered every '+config.timescale+' frames');
             if (config.btn_start && config.btn_stop) {
                 element_show(config.btn_stop);
                 element_hide(config.btn_start);
@@ -282,7 +286,7 @@ Life.prototype = function() {
 
     debug = {
         log: function() {
-            if (!self.config.debug) { return; }
+            if (!config.debug) { return; }
 
             var args = Array.prototype.slice.call(arguments);
             if (window.console) {
@@ -294,6 +298,15 @@ Life.prototype = function() {
                 }
             }
         }
+    },
+
+    merge_objects = function(obj1, obj2) {
+        for( var key in obj2 ) {
+            if ( obj2.hasOwnProperty( key ) ) {
+                obj1[key] = obj2[key];
+            }
+        }
+        return obj1;
     },
 
     insert_after = function(refNode, newNode, className) {
@@ -320,6 +333,7 @@ Life.prototype = function() {
 
     return {
         init: init,
+        config: config,
         start: animation_start,
         stop: animation_stop
     };
