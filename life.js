@@ -218,7 +218,7 @@ Life.prototype = function() {
 
     on_next_frame = function() {
         render_frame( canvas, bitmap );
-        if (config.showfps) { fps_update() };
+        if (config.showfps) { fps_update(); };
         animation_last_run = timestamp_now();
         animation_id = requestAnimationFrame( on_next_frame );
     },
@@ -231,8 +231,9 @@ Life.prototype = function() {
                 element_show(config.btn_stop);
                 element_hide(config.btn_start);
             }
+            
+            fps_gauge = get_fps_gauge();
             if (config.showfps) {
-                fps_gauge = get_fps_gauge();
                 element_show(fps_gauge);
             }
             animation_id = requestAnimationFrame( on_next_frame ); 
@@ -289,7 +290,7 @@ Life.prototype = function() {
         if (gauge.length > 0) {
             return gauge[0];
         } else {
-            return insert_after(canvas, document.createElement('div'), 'life-fps-gauge');
+            return insert_after(canvas, element_hide(document.createElement('div')), 'life-fps-gauge');
         }
     },
 
