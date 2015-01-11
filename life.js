@@ -33,6 +33,7 @@ Life.prototype = function() {
         debug: false,
         controls: true,
         fullscreen: true,
+        showfps: true,
         stage: [ 800,600 ],
         selector: 'body',
         timescale: 1,  //for example, 1 means 1 cycle per frame.  must be an integer gte 1, the higher, the slower
@@ -217,7 +218,7 @@ Life.prototype = function() {
 
     on_next_frame = function() {
         render_frame( canvas, bitmap );
-        fps_update();
+        if (config.showfps) { fps_update() };
         animation_last_run = timestamp_now();
         animation_id = requestAnimationFrame( on_next_frame );
     },
@@ -230,8 +231,10 @@ Life.prototype = function() {
                 element_show(config.btn_stop);
                 element_hide(config.btn_start);
             }
-            fps_gauge = get_fps_gauge();
-            element_show(fps_gauge);
+            if (config.showfps) {
+                fps_gauge = get_fps_gauge();
+                element_show(fps_gauge);
+            }
             animation_id = requestAnimationFrame( on_next_frame ); 
         }
     },
