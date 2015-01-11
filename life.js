@@ -93,8 +93,8 @@ Life.prototype = function() {
         var seed = fill_out_bitmap([]),
             bias = bias ? bias : 1;
 
-        for ( var y=0; y < canvas.height; y++ ) {
-            for ( var x=0; x < canvas.width; x++ ) {
+        for ( var y=0; y < stage.height(); y++ ) {
+            for ( var x=0; x < stage.width(); x++ ) {
                 seed[y][x] = Math.round( Math.random() * bias );
             }
         }
@@ -151,8 +151,8 @@ Life.prototype = function() {
 
         apply: function( bitmap, x, y ) {
             var newframe = fill_out_bitmap( bitmap );
-            for ( var y=0; y < canvas.height; y++ ) {
-                for ( var x=0; x < canvas.width; x++ ) {
+            for ( var y=0; y < stage.height(); y++ ) {
+                for ( var x=0; x < stage.width(); x++ ) {
                     newframe[y][x] = rules.check_all( bitmap, x, y, rules.surround_count( bitmap, x, y ) ) ? 1 : 0;
                 }
             }
@@ -181,12 +181,12 @@ Life.prototype = function() {
     render_frame = function( canvas, bitmap ) {
         //do not apply rules or redraw if not enough frames have passed to satisfy timescale
         if ( frame_count >= ( frame_last_rendered + config.timescale ) ) {
-            ctx.clearRect ( 0 , 0 , canvas.width, canvas.height );
+            ctx.clearRect ( 0 , 0 , stage.width(), stage.height() );
 
             bitmap = rules.apply( bitmap );
 
-            for ( var y=0; y < canvas.height; y++ ) {
-                for ( var x=0; x < canvas.width; x++ ) {
+            for ( var y=0; y < stage.height(); y++ ) {
+                for ( var x=0; x < stage.width(); x++ ) {
                     if ( rules.alive( bitmap, x, y ) ) {
                        ctx.fillRect( x * config.cellsize, y * config.cellsize, config.cellsize, config.cellsize );
                     }
@@ -200,9 +200,9 @@ Life.prototype = function() {
 
     fill_out_bitmap = function( bitmap ) {
         //ensure our bitmap has all the pixels it needs
-        for ( var y=0; y < canvas.height; y++ ) {
-            for ( var x=0; x < canvas.width; x++ ) {
-                if ( !bitmap[y] ) { bitmap[y] = new Array(canvas.width); }
+        for ( var y=0; y < stage.height(); y++ ) {
+            for ( var x=0; x < stage.width(); x++ ) {
+                if ( !bitmap[y] ) { bitmap[y] = new Array(stage.width()); }
                 if ( !bitmap[y][x] ) { bitmap[y][x] = 0; }
             }
         }
