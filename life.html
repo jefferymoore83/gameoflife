@@ -15,24 +15,12 @@
 
 <script src="life.js"></script>
 <script>
-
-var btns = {
-	start: document.getElementsByClassName('btn-start')[0],
-	stop: document.getElementsByClassName('btn-stop')[0]
-},
-life = new Life( {
+var life = new Life( {
 	debug: true,
-	btn_start: btns.start,
-	btn_stop: btns.stop
+	btn_start: document.getElementsByClassName('btn-start')[0],
+	btn_stop: document.getElementsByClassName('btn-stop')[0],
+	cellsize: 7
 } );
-
-btns.start.onclick = function() {
-	life.start();
-};
-btns.stop.onclick = function() {
-	life.stop();
-};
-
 </script>
 </body>
 </html>

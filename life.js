@@ -18,22 +18,7 @@ http://natureofcode.com/book/chapter-7-cellular-automata/
 
 var Life = function(config) {
     "use strict";
-    
-    if (config) {
-        this.config = config;
-    }
-    this.init();
-    this.btn_start = config.btn_start;
-    this.btn_stop = config.btn_stop;
-    this.btn_stop.style.display = 'none';
-
-    //why doesn't this work??
-    // this.btn_start.onclick = function() {
-    //     this.start();
-    // };
-    // this.btn_stop.onclick = function() {
-    //     this.stop();
-    // };    
+    this.init(this.config = config); 
 };
 
 Life.prototype = function() {
@@ -90,8 +75,14 @@ Life.prototype = function() {
     fps_update_limit = 100,
     fps_last_update = timestamp_now(),
 
-    init = function() {
+    config = {},
+
+    init = function(cfg) {
         self = this;
+        config = cfg;
+        config.btn_start.onclick = animation_start;
+        config.btn_stop.onclick = animation_stop;
+        config.btn_stop.style.display = 'none';
     },
 
     generate_random_seed = function(bias) {
@@ -224,9 +215,9 @@ Life.prototype = function() {
     animation_start = function() {
         if (animation_id === false) {
             debug.log('timescale is '+timescale+', so a change will be rendered every '+timescale+' frames');
-            if (this.btn_start && this.btn_stop) {
-                element_show(this.btn_stop);
-                element_hide(this.btn_start);
+            if (config.btn_start && config.btn_stop) {
+                element_show(config.btn_stop);
+                element_hide(config.btn_start);
             }
             canvas = get_canvas();
             window.onresize = function() {
@@ -244,9 +235,9 @@ Life.prototype = function() {
     },
 
     animation_stop = function() {
-        if (this.btn_start && this.btn_stop) {
-            element_show(this.btn_start);
-            element_hide(this.btn_stop);
+        if (config.btn_start && config.btn_stop) {
+            element_show(config.btn_start);
+            element_hide(config.btn_stop);
         }
         if (animation_id !== false) {
             cancelAnimationFrame( animation_id );
