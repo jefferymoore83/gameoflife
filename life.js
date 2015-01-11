@@ -25,33 +25,14 @@ Life.prototype = function() {
     "use strict";
 
     var
-    self,
-    ctx,
-    canvas,
-    fps_gauge,
-    frame_last_rendered,
-    timestamp_now = function() { return new Date().getTime(); },
-
-    stage = {
-        width: function() { return config.fullscreen ? window.innerWidth : canvas.width; },
-        height: function() { return config.fullscreen ? window.innerHeight : canvas.height; }
-    },
-    
-    bitmap,
-    frame_count = 0,
-    
-    animation_id = false,
-    animation_last_run = timestamp_now(),
-
-    fps = 0,
-    fps_update_limit = 100,
-    fps_last_update = timestamp_now(),
+    ctx, canvas, bitmap, fps_gauge, fps_last_update, animation_id, animation_last_run, frame_count, frame_last_rendered,
+    fps = 0, fps_update_limit = 100,
 
     config = {
         debug: false,
         controls: true,
         fullscreen: true,
-        stage: [800,600],
+        stage: [ 800,600 ],
         selector: 'body',
         timescale: 1,  //for example, 1 means 1 cycle per frame.  must be an integer gte 1, the higher, the slower
         cellsize: 2, //for example, 10 means each pixel measures 10 pixels in width/height
@@ -81,11 +62,14 @@ Life.prototype = function() {
         ]
     },
 
-    init = function(cfg) {
-        self = this;
+    init = function(cfg) {        
         config = merge_objects( config, cfg );
         bitmap = config.random_seed ? generate_random_seed( config.random_seed ) : config.seed;
         canvas = get_canvas();
+        animation_id = false;
+        animation_last_run = timestamp_now();
+        fps_last_update = timestamp_now();
+        frame_count = 0;
         frame_last_rendered = -config.timescale;
 
         if (config.fullscreen) {
@@ -104,6 +88,11 @@ Life.prototype = function() {
             config.btn_stop.onclick = animation_stop;
             element_hide( config.btn_stop );
         }
+    },
+
+    stage = {
+        width: function() { return config.fullscreen ? window.innerWidth : canvas.width; },
+        height: function() { return config.fullscreen ? window.innerHeight : canvas.height; }
     },
 
     generate_random_seed = function(bias) {
@@ -326,6 +315,8 @@ Life.prototype = function() {
         }
         return obj1;
     },
+
+    timestamp_now = function() { return new Date().getTime(); },
 
     insert_after = function(refNode, newNode, className) {
         refNode.parentNode.insertBefore(newNode, refNode.nextSibling);
