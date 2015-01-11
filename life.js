@@ -4,11 +4,11 @@ by Jeffery Moore and Brandon Foster
 
 TODO:
 
--create default option object that gets merged with passed values
 -ability to speed up and slow down easily, dynamically even
 -a bar that lets you seek to different points in time
 -want to write results to files if possible
 -draw vectors so they could later be custom shapes
+-could there be different types of life, represented by different colors, with different life/death rules?
 
 references:
 http://en.wikipedia.org/wiki/Conway%27s_Game_of_Life#Algorithms
@@ -33,35 +33,11 @@ Life.prototype = function() {
     timestamp_now = function() { return new Date().getTime(); },
 
     stage = {
-        width: function() { return window.innerWidth; },
-        height: function() { return window.innerHeight; }
+        width: function() { return config.fullscreen ? window.innerWidth : canvas.width; },
+        height: function() { return config.fullscreen ? window.innerHeight : canvas.height; }
     },
-
-    //could there be different types of life, represented by different colors, with different life/death rules?
-    seed = [
-        [0,0,0,0,0,0,0,0,0,0],
-        [0,0,0,0,0,0,0,0,0,0],
-        [0,0,0,0,1,0,0,0,0,0],
-        [0,0,0,1,0,1,0,0,0,0],
-        [0,0,0,1,1,1,0,0,0,0],
-        [0,0,1,0,1,0,0,0,0,0],
-        [0,0,1,1,0,1,0,0,0,0],
-        [0,0,0,0,1,0,0,0,0,0],
-        [0,0,0,0,0,0,0,0,0,0]
-    ],
-    seed = [
-        [1,0,1,0,1,0,1,0,1,0,1,0],
-        [0,1,0,1,0,1,0,1,0,1,0,1],
-        [1,0,1,0,1,0,1,0,1,0,1,0],
-        [0,1,0,1,0,1,0,1,0,1,0,1],
-        [1,0,1,0,1,0,1,0,1,0,1,0],
-        [0,1,0,1,0,1,0,1,0,1,0,1],
-        [1,0,1,0,1,0,1,0,1,0,1,0],
-        [0,1,0,1,0,1,0,1,0,1,0,1],
-        [1,0,1,0,1,0,1,0,1,0,1,0],
-        [0,1,0,1,0,1,0,1,0,1,0,1]
-    ],
-    bitmap = seed,
+    
+    bitmap,
     frame_count = 0,
     
     animation_id = false,
@@ -73,19 +49,60 @@ Life.prototype = function() {
 
     config = {
         debug: false,
+        controls: true,
+        fullscreen: true,
+        stage: [800,600],
+        selector: 'body',
         timescale: 1,  //for example, 1 means 1 cycle per frame.  must be an integer gte 1, the higher, the slower
         cellsize: 2, //for example, 10 means each pixel measures 10 pixels in width/height
+        random_seed: .525,
+        seed : [
+            /*
+            [0,0,0,0,0,0,0,0,0,0],
+            [0,0,0,0,0,0,0,0,0,0],
+            [0,0,0,0,1,0,0,0,0,0],
+            [0,0,0,1,0,1,0,0,0,0],
+            [0,0,0,1,1,1,0,0,0,0],
+            [0,0,1,0,1,0,0,0,0,0],
+            [0,0,1,1,0,1,0,0,0,0],
+            [0,0,0,0,1,0,0,0,0,0],
+            [0,0,0,0,0,0,0,0,0,0]
+            */
+            [1,0,1,0,1,0,1,0,1,0,1,0],
+            [0,1,0,1,0,1,0,1,0,1,0,1],
+            [1,0,1,0,1,0,1,0,1,0,1,0],
+            [0,1,0,1,0,1,0,1,0,1,0,1],
+            [1,0,1,0,1,0,1,0,1,0,1,0],
+            [0,1,0,1,0,1,0,1,0,1,0,1],
+            [1,0,1,0,1,0,1,0,1,0,1,0],
+            [0,1,0,1,0,1,0,1,0,1,0,1],
+            [1,0,1,0,1,0,1,0,1,0,1,0],
+            [0,1,0,1,0,1,0,1,0,1,0,1]
+        ]
     },
 
     init = function(cfg) {
         self = this;
         config = merge_objects( config, cfg );
+        bitmap = config.random_seed ? generate_random_seed( config.random_seed ) : config.seed;
+        canvas = get_canvas();
         frame_last_rendered = -config.timescale;
 
+        if (config.fullscreen) {
+            window.onresize = function() {
+                canvas.width = stage.width();
+                canvas.height = stage.height();
+            };
+            window.onresize();
+        } else {
+            canvas.width = config.stage[0];
+            canvas.height = config.stage[1];
+        }
+        
         if ( config.btn_start && config.btn_stop ) {
             config.btn_start.onclick = animation_start;
             config.btn_stop.onclick = animation_stop;
-            config.btn_stop.style.display = 'none';
+            element_hide( config.btn_stop );
         }
     },
 
@@ -133,7 +150,6 @@ Life.prototype = function() {
                     living++;
                 }
             }
-            //debug.log('surround_counted: ',living);
             return living;
         },
 
@@ -202,7 +218,7 @@ Life.prototype = function() {
         //ensure our bitmap has all the pixels it needs
         for ( var y=0; y < stage.height(); y++ ) {
             for ( var x=0; x < stage.width(); x++ ) {
-                if ( !bitmap[y] ) { bitmap[y] = new Array(stage.width()); }
+                if ( !bitmap[y] ) { bitmap[y] = new Array( stage.width() ); }
                 if ( !bitmap[y][x] ) { bitmap[y][x] = 0; }
             }
         }
@@ -219,37 +235,30 @@ Life.prototype = function() {
     animation_start = function() {
         if (animation_id === false) {
             debug.log('timescale is '+config.timescale+', so a change will be rendered every '+config.timescale+' frames');
+            
             if (config.btn_start && config.btn_stop) {
                 element_show(config.btn_stop);
                 element_hide(config.btn_start);
             }
-            canvas = get_canvas();
-            window.onresize = function() {
-                canvas.width = stage.width();
-                canvas.height = stage.height();
-            };
-            window.onresize();
-
             fps_gauge = get_fps_gauge();
             element_show(fps_gauge);
-
-            bitmap = generate_random_seed(.525);
             animation_id = requestAnimationFrame( on_next_frame ); 
         }
     },
 
     animation_stop = function() {
-        if (config.btn_start && config.btn_stop) {
-            element_show(config.btn_start);
-            element_hide(config.btn_stop);
-        }
         if (animation_id !== false) {
+            if (config.btn_start && config.btn_stop) {
+                element_show(config.btn_start);
+                element_hide(config.btn_stop);
+            }
             cancelAnimationFrame( animation_id );
             animation_id = false;
             element_hide(fps_gauge);
-            //element_remove(fps_gauge);
             debug.log('anim stopped');
-            window.onresize = null;
+            if (config.fullscreen) {
+                window.onresize = null;
+            }
         }
     },
 
@@ -260,7 +269,16 @@ Life.prototype = function() {
         } else {
             canvas = document.createElement('canvas');
             canvas.className = 'life-canvas';
-            document.querySelector('body').appendChild( canvas );
+            document.querySelector( config.selector ).appendChild( canvas );
+
+            if (config.controls) {
+                var controls = document.createElement('div');
+                insert_after(canvas, controls);
+                controls.className = 'life-controls';
+                controls.innerHTML = '<button class="btn-start">Start</button> <button class="btn-stop">Stop</button>';
+                config.btn_start = document.querySelectorAll('.life-controls .btn-start')[0];
+                config.btn_stop = document.querySelectorAll('.life-controls .btn-stop')[0];
+            }
         }
         ctx = canvas.getContext( "2d" );
         return canvas;

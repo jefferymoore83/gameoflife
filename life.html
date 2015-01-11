@@ -8,17 +8,10 @@
 </head>
 <body>
 
-<div class="life-controls">
-	<button class="btn-start">Start</button>
-	<button class="btn-stop">Stop</button>
-</div>
-
 <script src="life.js"></script>
 <script>
 var life = new Life( {
 	debug: true,
-	btn_start: document.getElementsByClassName('btn-start')[0],
-	btn_stop: document.getElementsByClassName('btn-stop')[0],
 	cellsize: 7
 } ).start();
 </script>
