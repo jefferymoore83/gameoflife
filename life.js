@@ -22,6 +22,7 @@ var Life = function(config) {
     if (config) {
         this.config = config;
     }
+    this.init();
     this.btn_start = config.btn_start;
     this.btn_stop = config.btn_stop;
     this.btn_stop.style.display = 'none';
@@ -88,6 +89,10 @@ Life.prototype = function() {
     fps = 0,
     fps_update_limit = 100,
     fps_last_update = timestamp_now(),
+
+    init = function() {
+        self = this;
+    },
 
     generate_random_seed = function(bias) {
         var seed = fill_out_bitmap([]),
@@ -217,7 +222,6 @@ Life.prototype = function() {
     },
 
     animation_start = function() {
-        self = this;
         if (animation_id === false) {
             debug.log('timescale is '+timescale+', so a change will be rendered every '+timescale+' frames');
             if (this.btn_start && this.btn_stop) {
@@ -324,6 +328,7 @@ Life.prototype = function() {
     };
 
     return {
+        init: init,
         start: animation_start,
         stop: animation_stop
     };
