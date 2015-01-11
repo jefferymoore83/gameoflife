@@ -4,6 +4,7 @@ by Jeffery Moore and Brandon Foster
 
 TODO:
 
+-render first frame on init
 -ability to speed up and slow down easily, dynamically even
 -a bar that lets you seek to different points in time
 -want to write results to files if possible
@@ -267,6 +268,13 @@ Life.prototype = function() {
                 controls.innerHTML = '<button class="btn-start">Start</button> <button class="btn-stop">Stop</button>';
                 config.btn_start = document.querySelectorAll('.life-controls .btn-start')[0];
                 config.btn_stop = document.querySelectorAll('.life-controls .btn-stop')[0];
+
+                //controls.innerHTML += '<input class="range-cellsize" type="range" min="1" max="50" step="1" value="' + config.cellsize + '" />';
+                // var range_cellsize = document.querySelectorAll('.life-controls .range-cellsize')[0];
+                // range_cellsize.onchange = function() {
+                //     debug.log('set cellsize to ' + config.cellsize);
+                //     config.cellsize = this.value;
+                // };
             }
         }
         ctx = canvas.getContext( "2d" );
