@@ -27,7 +27,7 @@ Life.prototype = function() {
 
     var
     ctx, canvas, bitmap, fps_gauge, fps_last_update, animation_id, animation_last_run, frame_count, frame_last_rendered,
-    fps = 0, fps_update_limit = 100,
+    save_image_id, growth_id, fps = 0, fps_update_limit = 100,
 
     config = {
         debug: false,
@@ -93,8 +93,8 @@ Life.prototype = function() {
     },
 
     stage = {
-        width: function() { return config.fullscreen ? window.innerWidth : canvas.width; },
-        height: function() { return config.fullscreen ? window.innerHeight : canvas.height; }
+        width: function() { return config.fullscreen ? window.screen.width : canvas.width; },
+        height: function() { return config.fullscreen ? window.screen.height : canvas.height; }
     },
 
     generate_random_seed = function(bias) {
@@ -158,8 +158,8 @@ Life.prototype = function() {
 
         apply: function( bitmap, x, y ) {
             var newframe = fill_out_bitmap( bitmap );
-            for ( var y=0; y < stage.height(); y++ ) {
-                for ( var x=0; x < stage.width(); x++ ) {
+            for ( var y=0; y < newframe.length; y++ ) {
+                for ( var x=0; x < newframe[y].length; x++ ) {
                     newframe[y][x] = rules.check_all( bitmap, x, y, rules.surround_count( bitmap, x, y ) ) ? 1 : 0;
                 }
             }
@@ -189,8 +189,6 @@ Life.prototype = function() {
         //do not apply rules or redraw if not enough frames have passed to satisfy timescale
         if ( frame_count >= ( frame_last_rendered + config.timescale ) ) {
             ctx.clearRect ( 0 , 0 , stage.width(), stage.height() );
-
-            bitmap = rules.apply( bitmap );
 
             for ( var y=0; y < stage.height(); y++ ) {
                 for ( var x=0; x < stage.width(); x++ ) {
@@ -236,6 +234,16 @@ Life.prototype = function() {
             if (config.showfps) {
                 element_show(fps_gauge);
             }
+            if (config.service_url) {
+                save_image_id = setInterval( function() {
+                    ajax_post(config.service_url, {
+                        filename: 'game_of_life_',
+                        data: canvas.toDataURL(),
+                        service_save_dir: config.service_save_dir
+                    } );
+                }, 100);
+            }
+            growth_id = setInterval( function() { bitmap = rules.apply( bitmap ); }, 1 );
             animation_id = requestAnimationFrame( on_next_frame ); 
         }
     },
@@ -246,10 +254,11 @@ Life.prototype = function() {
                 element_show(config.btn_start);
                 element_hide(config.btn_stop);
             }
+            clearInterval(growth_id);
+            clearInterval(save_image_id);
             cancelAnimationFrame( animation_id );
             animation_id = false;
             element_hide(fps_gauge);
-            debug.log('anim stopped');
             if (config.fullscreen) {
                 window.onresize = null;
             }
@@ -326,6 +335,17 @@ Life.prototype = function() {
             }
         }
         return obj1;
+    },
+
+    ajax_post = function(url, data) {
+        var request = new XMLHttpRequest();
+        request.open('POST', url, true);
+        request.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded; charset=UTF-8');
+        var query = [];
+        for (var key in data) {
+            query.push(encodeURIComponent(key) + '=' + encodeURIComponent(data[key]));
+        }
+        request.send(query.join('&'));
     },
 
     timestamp_now = function() { return new Date().getTime(); },
